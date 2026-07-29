@@ -11,6 +11,13 @@
   <link rel="apple-touch-icon" href="icon.svg" />
 </head>
 <body>
+  <!-- 微信内打开提示：检测到微信内置浏览器时显示，引导用系统浏览器打开 -->
+  <div id="wechatTip" class="wechat-tip" hidden>
+    <span class="wt-ico" aria-hidden="true">↗</span>
+    <span class="wt-text">微信内打开可能受限：点右上角 <b>⋯</b> → <b>在浏览器打开</b>，体验更顺畅</span>
+    <button id="wechatTipClose" class="wt-close" aria-label="关闭提示">×</button>
+  </div>
+
   <!-- 装饰光斑 -->
   <div class="aurora" aria-hidden="true">
     <span class="blob blob-1"></span>
@@ -582,6 +589,16 @@
   <script src="js/sync-config.js"></script>
   <script src="js/app.js?v=58"></script>
   <script>
+    // 微信内置浏览器环境检测：显示打开方式提示
+    (function () {
+      var isWeChat = /micromessenger/i.test(navigator.userAgent || '');
+      var tip = document.getElementById('wechatTip');
+      if (isWeChat && tip) {
+        tip.hidden = false;
+        var close = document.getElementById('wechatTipClose');
+        if (close) close.addEventListener('click', function () { tip.hidden = true; });
+      }
+    })();
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('sw.js').catch(function () {});
