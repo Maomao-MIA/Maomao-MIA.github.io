@@ -1,0 +1,16 @@
+# Build artifacts / backups / dev helpers — NOT part of the static site
+*.bak
+*.bak-*
+backup-*/
+.workbuddy/
+scripts/
+*.py
+*.cjs
+*.mjs
+nul
+set1-readme.md
+overview.md
+userbank.json
+userbank.json*
+set1-pre-*.json.bak
+set1-with-test.json.bak

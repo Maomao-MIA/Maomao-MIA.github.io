@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>题海 · 选择题刷题</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E题%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d9488" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+</head>
+<body>
+  <!-- 装饰光斑 -->
+  <div class="aurora" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <header class="topbar">
+    <div class="brand" data-magnetic>
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M9 11h14M9 16h14M9 21h9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-name">题海<i>Practice</i></span>
+    </div>
+
+    <nav class="nav" aria-label="主导航">
+      <button class="nav-link" data-view="dashboard">首页</button>
+      <button class="nav-link" data-view="wrong">错题本</button>
+      <button class="nav-link" data-view="favorites">收藏</button>
+      <button class="nav-link" data-view="history">记录</button>
+      <button class="nav-link" data-view="import">题库</button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button id="themeToggle" class="icon-btn" aria-label="切换主题" title="切换主题">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- ===================== 首页 / 仪表盘 ===================== -->
+    <section id="view-dashboard" class="view" aria-label="首页">
+      <div class="hero">
+        <p class="eyebrow">高效刷题 · 错题闭环</p>
+        <h1 class="hero-title">把每一道错题，<br/>都变成下一次的得分。</h1>
+        <p class="hero-sub">随机抽题、专项突破、错题自动归集。数据全部保存在本地，隐私不出设备。</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" data-action="goto-setup">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+            开始刷题
+          </button>
+          <button class="btn btn-primary btn-lg" data-action="composed" data-magnetic>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+            随机出题
+          </button>
+          <button class="btn btn-ghost btn-lg" data-action="goto-wrong">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
+            复习错题
+          </button>
+        </div>
+      </div>
+
+      <div class="bento">
+        <div class="card stat-card">
+          <span class="stat-label">题库总量</span>
+          <span class="stat-value" id="statTotal">0</span>
+          <span class="stat-foot" id="statCats">覆盖 0 个分类</span>
+        </div>
+        <div class="card stat-card accent-soft">
+          <span class="stat-label">待攻克错题</span>
+          <span class="stat-value" id="statWrong">0</span>
+          <span class="stat-foot" id="statWrongFoot">保持手感，专项突破</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">累计练习</span>
+          <span class="stat-value" id="statDone">0</span>
+          <span class="stat-foot">题次 · 本地记录</span>
+        </div>
+
+        <div class="card panel-quick">
+          <h3 class="card-title">快速开始</h3>
+          <div class="quick-grid">
+            <button class="quick-item" data-action="goto-setup">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span>
+              <span>随机刷题</span>
+            </button>
+            <button class="quick-item" data-action="composed">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+              <span>随机出题</span>
+            </button>
+            <button class="quick-item" data-action="goto-wrong">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+              <span>错题专项</span>
+            </button>
+            <button class="quick-item" data-action="goto-favorites">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.2 8 12.7 4 8.8 9.5 8 12 3z"/></svg></span>
+              <span>收藏夹</span>
+            </button>
+            <button class="quick-item" data-action="goto-history">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+              <span>练习记录</span>
+            </button>
+            <button class="quick-item" data-action="goto-import">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span>
+              <span>导入题库</span>
+            </button>
+            <button class="quick-item" data-action="export-bank">
+              <span class="quick-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M4 3h16"/></svg></span>
+              <span>导出备份</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card panel-tip">
+          <h3 class="card-title">刷题小贴士</h3>
+          <ul class="tip-list">
+            <li>答错自动进入错题本，复盘更高效。</li>
+            <li>专项练习答对即标记为已掌握，自动移出错题本。</li>
+            <li>支持 JSON / CSV 导入，轻松换成你的专属题库。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 刷题设置 ===================== -->
+    <section id="view-setup" class="view" hidden aria-label="刷题设置">
+      <div class="setup-wrap">
+        <button class="back-link" data-action="goto-dashboard">← 返回首页</button>
+        <h2 class="section-title" id="setupTitle">开始刷题</h2>
+        <p class="section-sub" id="setupSub">选择题目数量与范围，系统将随机抽取。</p>
+
+        <div class="card setup-card">
+          <div class="field">
+            <label class="field-label">题目数量</label>
+            <div class="chip-row" id="countChips">
+              <button class="chip" data-count="10">10 题</button>
+              <button class="chip" data-count="20">20 题</button>
+              <button class="chip" data-count="50">50 题</button>
+              <button class="chip" data-count="0">全部</button>
+            </div>
+            <div class="custom-count">
+              <input type="number" id="customCount" min="1" max="999" placeholder="自定义数量" inputmode="numeric" />
+              <span class="field-hint">留空则按所选档位</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">题目范围</label>
+            <div class="chip-row" id="catChips"><!-- JS 注入 --></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">套题 <span class="field-note">（选某套即整套练习，含音乐常识 / 基本乐理 / 听力）</span></label>
+            <div class="chip-row" id="setChips"><!-- JS 注入 --></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">答题节奏</label>
+            <div class="chip-row" id="timeChips">
+              <button class="chip active" data-time="0">不限时</button>
+              <button class="chip" data-time="15">15 秒 / 题</button>
+              <button class="chip" data-time="30">30 秒 / 题</button>
+              <button class="chip" data-time="60">60 秒 / 题</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">听力计时 <span class="field-note">（仅听力题生效 · 播放音频后才开始倒计时）</span></label>
+            <div class="chip-row" id="listenChips">
+              <button class="chip active" data-listen="0">关闭</button>
+              <button class="chip" data-listen="15">15 秒</button>
+              <button class="chip" data-listen="30">30 秒</button>
+            </div>
+          </div>
+
+          <div class="field weak-field" id="weakField" hidden>
+            <label class="check-row">
+              <input type="checkbox" id="weakFirst" />
+              <span>优先练薄弱点（错误次数多的排在前面）</span>
+            </label>
+          </div>
+
+          <div class="setup-actions">
+            <button class="btn btn-primary btn-lg" id="startBtn" data-magnetic>开始练习</button>
+            <button class="btn btn-ghost btn-lg" data-action="composed" data-magnetic>随机出题（10常识+10乐理+15听力）</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 练习中 ===================== -->
+    <section id="view-practice" class="view" hidden aria-label="练习中">
+      <div class="practice-wrap">
+        <div class="practice-top">
+          <button class="back-link" id="quitPractice">← 退出</button>
+          <div class="progress">
+            <div class="progress-meta">
+              <span id="progLabel">第 1 / 10 题</span>
+              <span id="progScore" class="prog-score">正确 0</span>
+            </div>
+            <div class="progress-track"><span class="progress-fill" id="progFill"></span></div>
+          </div>
+        </div>
+
+        <article class="card question-card" id="questionCard">
+          <div class="q-tags">
+            <span class="tag tag-cat" id="qCat">分类</span>
+            <span class="tag tag-diff" id="qDiff">难度</span>
+            <span class="tag tag-index" id="qIndex">Q1</span>
+            <span class="q-tools">
+              <button class="q-tool" id="favBtn" title="收藏" aria-label="收藏">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.2 8 12.7 4 8.8 9.5 8 12 3z"/></svg>
+              </button>
+              <button class="q-tool" id="noteBtn" title="笔记" aria-label="笔记">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+              </button>
+            </span>
+          </div>
+
+          <div class="q-timer" id="qTimer" hidden>
+            <span class="q-timer-num" id="qTimerNum">30s</span>
+            <div class="q-timer-track"><span id="qTimerFill"></span></div>
+            <span class="q-timer-hint" id="qTimerHint" hidden></span>
+          </div>
+
+          <div class="q-media" id="qMedia" hidden>
+            <img class="q-img" id="qImage" alt="题目图片" hidden />
+            <div class="q-audio" id="qAudioWrap" hidden>
+              <button class="q-play" id="qPlayBtn" data-magnetic aria-label="播放音频">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span id="qPlayLabel">播放音频</span>
+              </button>
+              <span class="q-vol-wrap" title="响度（放大原轻录音）">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="q-vol-ico"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+                <input type="range" id="qVolume" min="1" max="4" step="0.1" value="2.5" class="q-vol" aria-label="响度" />
+              </span>
+              <audio id="qAudio" preload="none"></audio>
+            </div>
+          </div>
+
+          <h3 class="q-text" id="qText">题目加载中…</h3>
+          <div class="options" id="options"><!-- JS 注入 --></div>
+
+          <div class="note-area" id="noteArea" hidden>
+            <textarea id="noteInput" rows="2" placeholder="写点笔记，帮助记忆…"></textarea>
+          </div>
+
+          <div class="explain" id="explain" hidden>
+            <div class="explain-head">
+              <span class="explain-badge" id="explainBadge">解析</span>
+              <span id="explainTitle">正确答案</span>
+            </div>
+            <p id="explainText"></p>
+          </div>
+
+          <div class="practice-actions">
+            <button class="btn btn-primary" id="submitBtn" data-magnetic>提交答案</button>
+            <button class="btn btn-primary" id="nextBtn" hidden data-magnetic>下一题 →</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== 结果 ===================== -->
+    <section id="view-result" class="view" hidden aria-label="练习结果">
+      <div class="result-wrap">
+        <div class="card result-card">
+          <div class="ring" id="scoreRing">
+            <span class="ring-num" id="scoreNum">0%</span>
+            <span class="ring-label">正确率</span>
+          </div>
+          <div class="result-stats">
+            <div><b id="rTotal">0</b><span>总题数</span></div>
+            <div><b id="rCorrect">0</b><span>答对</span></div>
+            <div><b id="rWrong">0</b><span>答错</span></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn btn-primary" id="replayWrongBtn" hidden data-magnetic>重刷本次错题</button>
+            <button class="btn btn-ghost" data-action="goto-setup">再来一组</button>
+            <button class="btn btn-ghost" id="reviewWrongBtn">查看错题</button>
+            <button class="btn btn-ghost" data-action="goto-dashboard">返回首页</button>
+          </div>
+        </div>
+
+        <div class="card review-card" id="reviewCard" hidden>
+          <h3 class="card-title">本次错题回顾</h3>
+          <div id="reviewList" class="review-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 错题本 ===================== -->
+    <section id="view-wrong" class="view" hidden aria-label="错题本">
+      <div class="setup-wrap">
+        <button class="back-link" data-action="goto-dashboard">← 返回首页</button>
+        <div class="wrong-head">
+          <div>
+            <h2 class="section-title">错题本</h2>
+            <p class="section-sub">共 <b id="wrongCount">0</b> 道待攻克，已掌握 <b id="masteredCount">0</b> 道。</p>
+          </div>
+          <div class="wrong-head-actions">
+            <button class="btn btn-primary" id="drillWrongBtn" data-magnetic>专项练习</button>
+            <button class="btn btn-ghost btn-danger" id="clearWrongBtn">清空</button>
+          </div>
+        </div>
+        <div id="wrongList" class="wrong-list"><!-- JS 注入 --></div>
+        <div id="wrongEmpty" class="empty-state" hidden>
+          <div class="empty-ico"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.2 8 12.7 4 8.8 9.5 8 12 3z"/></svg></div>
+          <p>暂无错题，保持得真不错！</p>
+          <button class="btn btn-ghost" data-action="goto-setup">去做几道题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 练习记录 ===================== -->
+    <section id="view-history" class="view" hidden aria-label="练习记录">
+      <div class="setup-wrap">
+        <button class="back-link" data-action="goto-dashboard">← 返回首页</button>
+        <h2 class="section-title">练习记录</h2>
+        <p class="section-sub">本地保存的最近 <b id="histCount">0</b> 次成绩与正确率趋势。</p>
+        <div class="card chart-card">
+          <h3 class="card-title">正确率趋势</h3>
+          <div id="trendChart" class="trend-chart"></div>
+        </div>
+        <div class="card" id="histCard">
+          <h3 class="card-title">历史明细</h3>
+          <div id="histList" class="hist-list"></div>
+        </div>
+        <div id="histEmpty" class="empty-state" hidden>
+          <div class="empty-ico"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
+          <p>还没有练习记录，去做几道题吧！</p>
+          <button class="btn btn-ghost" data-action="goto-setup">开始刷题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 收藏夹 ===================== -->
+    <section id="view-favorites" class="view" hidden aria-label="收藏夹">
+      <div class="setup-wrap">
+        <button class="back-link" data-action="goto-dashboard">← 返回首页</button>
+        <div class="wrong-head">
+          <div>
+            <h2 class="section-title">收藏夹</h2>
+            <p class="section-sub">已收藏 <b id="favCount">0</b> 道题，可随时复习。</p>
+          </div>
+          <div class="wrong-head-actions">
+            <button class="btn btn-primary" id="drillFavBtn" data-magnetic>练习收藏</button>
+            <button class="btn btn-ghost btn-danger" id="clearFavBtn">清空</button>
+          </div>
+        </div>
+        <div id="favList" class="wrong-list"></div>
+        <div id="favEmpty" class="empty-state" hidden>
+          <div class="empty-ico"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.2 8 12.7 4 8.8 9.5 8 12 3z"/></svg></div>
+          <p>还没有收藏的题目，练习时点星标即可加入。</p>
+          <button class="btn btn-ghost" data-action="goto-setup">去刷题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 题库 / 导入 ===================== -->
+    <section id="view-import" class="view" hidden aria-label="题库管理">
+      <div class="setup-wrap">
+        <button class="back-link" data-action="goto-dashboard">← 返回首页</button>
+        <h2 class="section-title">题库管理</h2>
+        <p class="section-sub">导入你自己的题库，或导出当前题库做备份。本地数据永不外传。</p>
+
+        <div class="card import-card">
+          <div class="field">
+            <label class="field-label">方式一：粘贴文本导入</label>
+            <textarea id="importText" rows="7" placeholder="粘贴 JSON 数组，或 CSV 文本（首行可为表头）。"></textarea>
+            <div class="field-hint">支持格式见下方说明。</div>
+          </div>
+          <div class="field">
+            <label class="field-label">方式二：上传文件</label>
+            <label class="file-drop" id="fileDrop">
+              <input type="file" id="fileInput" accept=".json,.csv,.txt" hidden />
+              <span class="file-ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><path d="M12 11v6M9 14l3 3 3-3"/></svg></span>
+              <span>点击选择 .json / .csv 文件</span>
+            </label>
+          </div>
+          <div class="import-actions">
+            <button class="btn btn-primary" id="importBtn" data-magnetic>解析并导入</button>
+            <button class="btn btn-ghost" id="exportBtn">导出当前题库</button>
+            <button class="btn btn-ghost" id="syncOfficialBtn">同步官方题库</button>
+            <button class="btn btn-ghost btn-danger" id="resetBankBtn">恢复示例题库</button>
+            <button class="btn btn-ghost btn-danger" id="clearBankBtn">清空题库</button>
+          </div>
+          <div id="importMsg" class="import-msg" aria-live="polite"></div>
+        </div>
+
+        <div class="card import-card">
+          <h3 class="card-title">☁ 同步到服务器（永久保存你的题目与图片）</h3>
+          <p class="section-sub">当前为纯静态托管，浏览器里的题目 / 图片默认只存在本机，换网址或清缓存会丢失。点「导出」生成含图片的备份文件，把它发给我，我会合并进服务器题库并重新部署；之后任意网址、任意设备打开都会自动加载你的题目和图片，不再丢失。</p>
+          <div class="import-actions">
+            <button class="btn btn-primary" id="syncExportBtn" data-magnetic>① 导出我的题库（含图片）</button>
+          </div>
+          <div id="syncMsg" class="import-msg" aria-live="polite"></div>
+        </div>
+
+        <div class="card import-card">
+          <h3 class="card-title">🖼 手机上部分图片不显示？</h3>
+          <p class="section-sub">手机（尤其 iOS Safari）无法渲染过大的图片。点下面按钮，会把你已保存的大图压缩到手机可正常显示的尺寸（仅处理超过 300KB 的图，不丢题）。压缩后在手机上刷新页面即可显示。</p>
+          <div class="import-actions">
+            <button class="btn btn-primary" id="recompressBtn" data-magnetic>压缩 / 修复我的图片</button>
+          </div>
+          <div id="recompressMsg" class="import-msg" aria-live="polite"></div>
+        </div>
+
+        <div class="card format-card">
+          <h3 class="card-title">支持的格式</h3>
+          <div class="format-tabs">
+            <button class="fmt-tab active" data-fmt="json">JSON</button>
+            <button class="fmt-tab" data-fmt="csv">CSV</button>
+          </div>
+          <pre class="format-code" id="fmtJson">[
+  {
+    "question": "题干内容？",
+    "options": ["选项A", "选项B", "选项C", "选项D"],
+    "answer": 0,
+    "explanation": "解析（可选）",
+    "category": "分类名",
+    "difficulty": "简单",
+    "imageData": "题目图片 base64（可选）",
+    "audioData": "听力音频 base64（可选）"
+  }
+]</pre>
+          <pre class="format-code" id="fmtCsv" hidden>question,options,answer,explanation,category,difficulty
+题干内容？,选项A|选项B|选项C|选项D,0,解析文字,分类名,简单</pre>
+          <ul class="fmt-note">
+            <li>CSV 的 <b>options</b> 用 <b>|</b> 分隔各选项；<b>answer</b> 可为序号 0–3 或字母 A–D。</li>
+            <li>缺少 <b>category</b> / <b>difficulty</b> 时自动补默认值；缺少 <b>explanation</b> 不阻断导入。</li>
+            <li>导入采用<b>合并</b>策略：与现有题库按题干去重，不会丢失已有题目。</li>
+            <li>JSON 题目可带 <b>imageData</b> / <b>audioData</b>（base64）字段，分别作为题目图片与听力音频。</li>
+          </ul>
+        </div>
+
+        <div class="card banklist-card">
+          <div class="banklist-head">
+            <h3 class="card-title">已录入题目</h3>
+        <span class="banklist-count" id="bankCount">0 道</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="myOnlyBtn" data-magnetic>只看我的题</button>
+      </div>
+      <div class="bank-view-tabs" id="bankViewTabs">
+        <button type="button" class="bvt active" data-view-mode="group">分级浏览</button>
+        <button type="button" class="bvt" data-view-mode="flat">全部平铺</button>
+      </div>
+      <p class="section-sub">每道题完整展开（含题目、选项与正确答案、解析）。点「编辑」会在本题下方直接展开修改表单，点「删除」移除。</p>
+          <div class="bank-list" id="bankList"></div>
+          <div id="bankEmpty" class="empty-state" hidden>
+            <div class="empty-ico"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+            <p>题库还是空的，用下方表单录入第一道题吧。</p>
+          </div>
+        </div>
+
+        <div class="card editor-card" id="editorCard">
+          <h3 class="card-title">方式三：可视化录入（图片识别 + 音频）</h3>
+          <p class="section-sub">上传题目图片可一键识别文字，再录入选项与答案即可保存；听力题可上传音频。</p>
+
+          <div class="field">
+            <label class="field-label">题型 / 分类</label>
+            <div class="chip-row" id="edCats">
+              <button type="button" class="chip active" data-cat="音乐常识">音乐常识</button>
+              <button type="button" class="chip" data-cat="基本乐理">基本乐理</button>
+              <button type="button" class="chip" data-cat="听力">听力</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">等级</label>
+            <div class="chip-row" id="edLevels">
+              <button type="button" class="chip" data-level="乐理一级">乐理一级</button>
+              <button type="button" class="chip active" data-level="乐理二级">乐理二级</button>
+              <button type="button" class="chip" data-level="乐理三级">乐理三级</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">套题</label>
+            <div class="chip-row" id="edSets">
+              <button type="button" class="chip active" data-set="第一套">第一套</button>
+              <button type="button" class="chip" data-set="第二套">第二套</button>
+              <button type="button" class="chip" data-set="第三套">第三套</button>
+              <button type="button" class="chip" data-set="第四套">第四套</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">题目文字（支持内嵌图片）</label>
+            <textarea id="edQuestion" rows="3" placeholder="输入题目… 把光标放到要插图的位置，点「插入图片」或 Ctrl+V 粘贴"></textarea>
+            <div class="ed-toolbar">
+              <button type="button" class="btn btn-ghost btn-sm" id="edInlineImgBtn" data-magnetic>插入图片</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="edOcrBtn" data-magnetic>识别图片文字</button>
+              <input type="file" id="edInlineImgInput" accept="image/*" hidden />
+              <input type="file" id="edOcrInput" accept="image/*" hidden />
+            </div>
+            <div class="ed-q-preview" id="edQPreview" hidden></div>
+            <div class="ed-ocr-status" id="edOcrStatus" hidden></div>
+            <div class="field-hint">图片会嵌入题目文字中（显示为 [[图1]] 标记），练习时与文字同行显示，不再单独成块。删除文字里的 [[图N]] 即可移除该图。</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">选项（A–D）</label>
+            <div class="ed-opts">
+              <div class="ed-opt"><span class="opt-key">A</span><input type="text" id="edOpt0" placeholder="选项 A（可粘贴图片）" /><button type="button" class="ed-opt-img" id="edOptImgBtn0" data-i="0" title="粘贴/选择图片作为选项" aria-label="选项A图片"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button><div class="ed-opt-prev" id="edOptPrev0" hidden><img id="edOptImg0" alt="选项图片" /><button type="button" class="ed-opt-x" data-i="0" aria-label="移除图片">×</button></div></div>
+              <div class="ed-opt"><span class="opt-key">B</span><input type="text" id="edOpt1" placeholder="选项 B（可粘贴图片）" /><button type="button" class="ed-opt-img" id="edOptImgBtn1" data-i="1" title="粘贴/选择图片作为选项" aria-label="选项B图片"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button><div class="ed-opt-prev" id="edOptPrev1" hidden><img id="edOptImg1" alt="选项图片" /><button type="button" class="ed-opt-x" data-i="1" aria-label="移除图片">×</button></div></div>
+              <div class="ed-opt"><span class="opt-key">C</span><input type="text" id="edOpt2" placeholder="选项 C（可粘贴图片）" /><button type="button" class="ed-opt-img" id="edOptImgBtn2" data-i="2" title="粘贴/选择图片作为选项" aria-label="选项C图片"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button><div class="ed-opt-prev" id="edOptPrev2" hidden><img id="edOptImg2" alt="选项图片" /><button type="button" class="ed-opt-x" data-i="2" aria-label="移除图片">×</button></div></div>
+              <div class="ed-opt"><span class="opt-key">D</span><input type="text" id="edOpt3" placeholder="选项 D（可粘贴图片）" /><button type="button" class="ed-opt-img" id="edOptImgBtn3" data-i="3" title="粘贴/选择图片作为选项" aria-label="选项D图片"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button><div class="ed-opt-prev" id="edOptPrev3" hidden><img id="edOptImg3" alt="选项图片" /><button type="button" class="ed-opt-x" data-i="3" aria-label="移除图片">×</button></div></div>
+            </div>
+            <input type="file" id="edOptImgInput" accept="image/*" hidden />
+          </div>
+
+          <div class="field">
+            <label class="field-label">正确答案</label>
+            <div class="chip-row" id="edAnswer">
+              <button type="button" class="chip active" data-ans="0">A</button>
+              <button type="button" class="chip" data-ans="1">B</button>
+              <button type="button" class="chip" data-ans="2">C</button>
+              <button type="button" class="chip" data-ans="3">D</button>
+            </div>
+          </div>
+
+          <div class="field ed-audio-field" id="edAudioField" hidden>
+            <label class="field-label">听力音频</label>
+            <label class="file-drop sm" id="edAudioDrop">
+              <input type="file" id="edAudioInput" accept="audio/*" hidden />
+              <span class="file-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span>
+              <span>选择音频文件</span>
+            </label>
+            <div class="ed-audio-wrap" id="edAudioWrap">
+              <audio id="edAudioPreview" controls hidden></audio>
+              <button type="button" class="ed-img-x" id="edAudioClear" hidden aria-label="移除音频">×</button>
+            </div>
+          </div>
+
+          <div class="import-actions">
+            <button class="btn btn-primary" id="edSaveBtn" data-magnetic>保存到题库</button>
+            <button class="btn btn-ghost" id="edCancelBtn" hidden>取消编辑</button>
+            <button class="btn btn-ghost" id="edResetBtn">清空表单</button>
+          </div>
+          <div id="edMsg" class="import-msg" aria-live="polite"></div>
+        </div>
+        <div id="editorHome"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- 自定义确认弹窗（替代原生 confirm，避免被预览 iframe / PWA 沙箱拦截） -->
+  <div id="confirmOverlay" class="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmText">
+      <p class="confirm-text" id="confirmText"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-ghost" id="confirmCancel">取消</button>
+        <button type="button" class="btn btn-danger" id="confirmOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/sync-config.js"></script>
+  <script src="js/app.js?v=45"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

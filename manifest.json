@@ -1,0 +1,20 @@
+{
+  "name": "题海 · 选择题刷题",
+  "short_name": "题海",
+  "description": "高效刷题、错题闭环，数据本地保存，支持离线使用。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
