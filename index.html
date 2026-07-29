@@ -551,6 +551,23 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- 题库加载错误横幅：拉取官方题库失败（已自动重试）后显示，绝不再静默回退示例题 -->
+  <div id="bankError" class="bank-error" hidden role="alert" aria-live="assertive">
+    <div class="bank-error-inner">
+      <span class="bank-error-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      </span>
+      <div class="bank-error-body">
+        <p class="bank-error-title">题库加载失败</p>
+        <p class="bank-error-msg" id="bankErrorMsg"></p>
+      </div>
+      <div class="bank-error-actions">
+        <button class="btn btn-primary btn-sm" id="bankRetryBtn" data-magnetic>重试</button>
+        <button class="btn btn-ghost btn-sm" id="bankSampleBtn">仍使用示例题</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 自定义确认弹窗（替代原生 confirm，避免被预览 iframe / PWA 沙箱拦截） -->
   <div id="confirmOverlay" class="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmText">
@@ -563,7 +580,7 @@
   </div>
 
   <script src="js/sync-config.js"></script>
-  <script src="js/app.js?v=45"></script>
+  <script src="js/app.js?v=56"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {

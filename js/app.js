@@ -617,11 +617,8 @@
   // - 内置示例题（s1..）丢弃
   // 这样「同步官方题库」永远不会清空用户录入的内容（含图片），解决「同步后图片全丢」的事故。
   function syncOfficialBank(silent, force) {
-    return fetch(officialUrl())
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(function (text) {
-        var res = parseImport(text);
-        if (!res || !res.ok) throw new Error('parse');
+    return fetchOfficialBank(3).then(function (res) {
+        hideBankError(); // 升级/同步成功即收起可能的加载错误横幅
         var newSig = computeOfficialSig(res.questions);
         var kept = [];
         var officialIds = {};
@@ -685,13 +682,54 @@
       .catch(function () { if (!silent) toast('同步失败（可能离线）', 'bad'); });
   }
 
-  // 首次打开：优先用 set1.json 作为初始题库；离线或不存在时回退示例
+  // 拉取官方题库（带自动重试）。成功解析返回 res；全部失败则抛出。
+  // 这是「首次加载」与「静默自动升级」共用的韧性核心：网络抖动能自愈，不再静默回退示例题。
+  function fetchOfficialBank(retries, onRetry) {
+    retries = retries || 1;
+    function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function go(n) {
+      return fetch(officialUrl())
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function (text) {
+          var res = parseImport(text);
+          if (!res || !res.ok) throw new Error('解析失败');
+          return res;
+        })
+        .catch(function (err) {
+          if (n < retries) {
+            if (onRetry) try { onRetry(n, retries); } catch (e) {}
+            return delay(900).then(function () { return go(n + 1); });
+          }
+          throw err;
+        });
+    }
+    return go(1);
+  }
+
+  // 错误横幅：拉取失败时显示明确提示 + 手动重试按钮（不再静默换成示例题）
+  function showBankError(msg, final) {
+    var box = document.getElementById('bankError');
+    var msgEl = document.getElementById('bankErrorMsg');
+    if (!box || !msgEl) return;
+    msgEl.textContent = msg;
+    box.hidden = false;
+    box.classList.toggle('is-final', !!final);
+    var actions = box.querySelector('.bank-error-actions');
+    if (actions) actions.style.display = final ? '' : 'none';
+  }
+  function hideBankError() {
+    var box = document.getElementById('bankError');
+    if (box) box.hidden = true;
+  }
+
+  // 首次打开：优先用 set1.json 作为初始题库。
+  // 韧性策略（tihai-v56）：拉取失败自动重试最多 3 次；全部失败才显示明确错误横幅并提供手动重试，
+  // 绝不静默回退到示例题（用户若确需离线样例，可显式点「仍使用示例题」）。
   function seedInitialBank() {
-    fetch(officialUrl())
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(function (text) {
-        var res = parseImport(text);
-        if (!res || !res.ok) throw new Error('parse');
+    fetchOfficialBank(3, function (attempt, total) {
+      showBankError('题库加载遇到网络抖动，正在自动重试（第 ' + attempt + '/' + total + ' 次）…', false);
+    })
+      .then(function (res) {
         state.bank = res.questions.slice();
         state.bank.forEach(ensureUid);
         saveBank();
@@ -699,12 +737,25 @@
         renderDashboard(); renderBankList();
         if (res.media && MediaStore.available()) MediaStore.putAll(res.media).catch(function () {});
         lastOfficialMedia = res.media || lastOfficialMedia; // 内存缓存，播放无需再拉云端
+        hideBankError();
       })
       .catch(function () {
-        state.bank = buildSampleBank(); saveBank();
-        renderDashboard(); renderBankList();
+        showBankError('无法从服务器获取最新题库（已自动重试 3 次）。请检查网络后点「重试」；或先点「仍使用示例题」离线浏览样例。', true);
       });
   }
+
+  // 错误横幅按钮（脚本位于 body 末尾，DOM 已就绪）
+  (function bindBankError() {
+    var retry = document.getElementById('bankRetryBtn');
+    var sample = document.getElementById('bankSampleBtn');
+    if (retry) retry.addEventListener('click', function () { hideBankError(); seedInitialBank(); });
+    if (sample) sample.addEventListener('click', function () {
+      hideBankError();
+      state.bank = buildSampleBank(); saveBank();
+      renderDashboard(); renderBankList();
+      toast('已加载示例题（离线样例），点「同步官方题库」或刷新可拉取完整题库', 'bad');
+    });
+  })();
   // 只读拉取服务器上的 userbank.json（用户自定义题 + 图片），自动合入本地题库。
   // 实现「同步到服务器」后跨网址 / 跨设备可用：用户在任一浏览器导出并交由我合并进服务器后，
   // 任意网址、任意设备打开都会自动加载其题目与图片，不再因换网址 / 清缓存而丢失。

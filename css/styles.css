@@ -433,6 +433,31 @@ textarea { width: 100%; resize: vertical; line-height: 1.6; }
 .toast.ok { border-color: var(--ok-soft); }
 .toast.bad { border-color: var(--bad-soft); }
 
+/* ---------- 题库加载错误横幅 ---------- */
+.bank-error {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 150;
+  background: color-mix(in srgb, var(--bad) 14%, var(--surface-solid));
+  border-bottom: 1px solid var(--bad-soft);
+  backdrop-filter: blur(14px) saturate(140%);
+  padding: 12px 16px; display: flex; justify-content: center;
+  animation: bankErrorIn 0.3s var(--ease);
+}
+.bank-error[hidden] { display: none; }
+.bank-error-inner {
+  width: min(720px, 94vw); display: flex; align-items: center; gap: 12px; color: var(--text);
+}
+.bank-error-ico { color: var(--bad); flex: none; display: grid; place-items: center; }
+.bank-error-body { flex: 1; min-width: 0; }
+.bank-error-title { font-weight: 800; font-size: 0.95rem; margin: 0 0 2px; }
+.bank-error-msg { font-size: 0.85rem; color: var(--text-2); margin: 0; line-height: 1.5; }
+.bank-error-actions { display: flex; gap: 8px; flex: none; }
+.bank-error.is-final .bank-error-inner { flex-wrap: wrap; }
+@keyframes bankErrorIn { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 560px) {
+  .bank-error-inner { flex-wrap: wrap; }
+  .bank-error-actions { width: 100%; justify-content: flex-end; }
+}
+
 /* ---------- 自定义确认弹窗 ---------- */
 .confirm-overlay {
   position: fixed; inset: 0; z-index: 200;
