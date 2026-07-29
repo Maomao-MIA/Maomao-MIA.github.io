@@ -1,4 +1,4 @@
-const CACHE = 'tihai-v57';
+const CACHE = 'tihai-v58';
 const ASSETS = [
   './',
   './index.html',

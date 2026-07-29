@@ -1,5 +1,5 @@
 /* ============================================================
-   题海 · Practice — 高级感刷题应用样式
+   中国音乐学院乐理考级题库 · Practice — 高级感刷题应用样式
    设计基调：克制留白 / 玻璃拟态 / 单一青色强调 / 流畅过渡
    ============================================================ */
 
@@ -131,8 +131,8 @@ input, textarea { font-family: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -0.02em; }
 .brand-mark { display: grid; place-items: center; filter: drop-shadow(0 6px 12px var(--accent-soft)); }
-.brand-name { font-size: 1.18rem; }
-.brand-name i { font-style: normal; font-weight: 500; color: var(--text-3); font-size: 0.82rem; margin-left: 6px; letter-spacing: 0.04em; }
+.brand-name { font-size: 0.95rem; white-space: nowrap; line-height: 1.1; }
+.brand-name i { font-style: normal; font-weight: 500; color: var(--text-3); font-size: 0.78rem; margin-left: 6px; letter-spacing: 0.04em; }
 .nav { display: flex; gap: 4px; margin-left: 12px; }
 .nav-link { padding: 8px 14px; border-radius: 12px; color: var(--text-2); font-weight: 600; font-size: 0.92rem; transition: all 0.25s var(--ease); }
 .nav-link:hover { background: var(--surface-2); color: var(--text); }
@@ -519,9 +519,12 @@ textarea { width: 100%; resize: vertical; line-height: 1.6; }
 @media (max-width: 860px) {
   .bento { grid-template-columns: repeat(2, 1fr); }
   .panel-quick, .panel-tip { grid-column: span 2; }
+  .brand-name { font-size: 0.82rem; }
+  .brand-name i { display: none; }
 }
 @media (max-width: 560px) {
   .nav { display: none; }
+  .brand-name { font-size: 0.84rem; }
   .bento { grid-template-columns: 1fr; }
   .panel-quick, .panel-tip { grid-column: span 1; }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }

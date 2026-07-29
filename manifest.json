@@ -1,6 +1,6 @@
 {
-  "name": "题海 · 选择题刷题",
-  "short_name": "题海",
+  "name": "中国音乐学院乐理考级题库 · 选择题刷题",
+  "short_name": "乐理考级题库",
   "description": "高效刷题、错题闭环，数据本地保存，支持离线使用。",
   "lang": "zh-CN",
   "start_url": "./index.html",
