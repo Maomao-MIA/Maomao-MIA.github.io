@@ -584,7 +584,7 @@
     return state.bank.every(function (q) { return set[normText(q.question)]; });
   }
 
-  // 同步官方题库（set1.json）：
+  // 同步官方题库（bank/ 分套文件）：
   // - silent=true 用于启动时的自动升级 / 自动更新（无提示）
   // - 自动升级：设备仍是内置示例时，静默替换为官方题库
   // - 自动更新：设备题库与上次官方版本一致、且官方有新版时，静默替换
@@ -611,7 +611,7 @@
     var id = q && q.id || '';
     return !/^(set\d+-|s\d+$)/.test(id); // 官方 id 形如 set1-mc-01；内置示例 s1..s30
   }
-  // 同步官方题库（set1.json）—— 合并式、非破坏性：
+  // 同步官方题库（bank/ 分套文件）—— 合并式、非破坏性：
   // - 官方题按 id 刷新；但若本地该题被用户改过（加过图片/音频或修改过文字），保留本地版本
   // - 用户的自定义题（含图片/音频）永不被覆盖或清除
   // - 内置示例题（s1..）丢弃
@@ -667,6 +667,7 @@
           kept.push(ex);
         });
         state.bank = kept;
+        stripSamples(); // 任何情况下都清掉内置示例题，避免示例与官方题混在一起
         state.bank.forEach(ensureUid);
         dedupeBank();
         saveBank();
@@ -682,28 +683,46 @@
       .catch(function () { if (!silent) toast('同步失败（可能离线）', 'bad'); });
   }
 
-  // 拉取官方题库（带自动重试）。成功解析返回 res；全部失败则抛出。
-  // 这是「首次加载」与「静默自动升级」共用的韧性核心：网络抖动能自愈，不再静默回退示例题。
+  // 拉取官方题库（按套切成多个小文件并行加载 + 自动重试）。
+  // 任一文件失败只在单文件内重试，不影响其它套；彻底解决「单次拉取整库 6.9MB 易超时」导致的示例题残留问题。
+  function officialIndexUrl() { return 'bank-index.json?_=' + Date.now(); }
+  function officialChunkUrl(s) { return 'bank/' + s + '.json?_=' + Date.now(); }
+  function fetchWithRetry(url, retries, onRetry, n) {
+    n = n || 1;
+    return fetch(url)
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .catch(function (err) {
+        if (n < retries) {
+          if (onRetry) try { onRetry(n, retries); } catch (e) {}
+          return new Promise(function (r) { setTimeout(r, 900); }).then(function () { return fetchWithRetry(url, retries, onRetry, n + 1); });
+        }
+        throw err;
+      });
+  }
   function fetchOfficialBank(retries, onRetry) {
-    retries = retries || 1;
-    function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-    function go(n) {
-      return fetch(officialUrl())
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-        .then(function (text) {
-          var res = parseImport(text);
-          if (!res || !res.ok) throw new Error('解析失败');
+    retries = retries || 3;
+    return fetchWithRetry(officialIndexUrl(), retries, onRetry, 1)
+      .then(function (idxText) {
+        var idx;
+        try { idx = JSON.parse(idxText); } catch (e) { throw new Error('bank-index 解析失败'); }
+        var sets = (idx && idx.sets) || [];
+        if (!sets.length) throw new Error('bank-index 为空');
+        return Promise.all(sets.map(function (s) {
+          return fetchWithRetry(officialChunkUrl(s), retries, onRetry, 1)
+            .then(function (t) { return JSON.parse(t); });
+        })).then(function (chunks) {
+          var questions = [];
+          var media = {};
+          chunks.forEach(function (c) {
+            if (c && Array.isArray(c.questions)) questions = questions.concat(c.questions);
+            if (c && c._media && typeof c._media === 'object') Object.assign(media, c._media);
+          });
+          var res = parseBankText(JSON.stringify({ questions: questions, _media: media }));
+          if (!res || !res.ok) throw new Error('题库解析失败');
+          res.media = media;
           return res;
-        })
-        .catch(function (err) {
-          if (n < retries) {
-            if (onRetry) try { onRetry(n, retries); } catch (e) {}
-            return delay(900).then(function () { return go(n + 1); });
-          }
-          throw err;
         });
-    }
-    return go(1);
+      });
   }
 
   // 错误横幅：拉取失败时显示明确提示 + 手动重试按钮（不再静默换成示例题）
@@ -1980,25 +1999,9 @@
   }
 
   /* ---------------- 导入 / 导出 ---------------- */
-  function parseImport(text) {
-    text = (text || '').trim();
-    if (!text) return { ok: false, msg: '内容为空' };
-    var parsed = null;
-    try {
-      parsed = JSON.parse(text);
-    } catch (e) { /* 尝试 CSV */ }
-
-    var arr = [];
-    if (parsed) {
-      if (Array.isArray(parsed)) arr = parsed;
-      else if (Array.isArray(parsed.questions)) arr = parsed.questions;
-      else if (Array.isArray(parsed.data)) arr = parsed.data;
-      else return { ok: false, msg: 'JSON 格式应是题目数组' };
-    } else {
-      arr = parseCSV(text);
-      if (!arr) return { ok: false, msg: '无法解析，请检查 CSV 格式' };
-    }
-
+  // 纯函数：将原始题目数组转换为规范题对象数组（不触碰 state.bank）。
+  // 供「导入」与「拉取官方题库」共用，避免官方题库拉取时误改本地题库（旧版 fetchOfficialBank 直接调 parseImport 会顺带改写 state.bank）。
+  function buildQuestions(arr) {
     var valid = [];
     arr.forEach(function (o) {
       if (!o || typeof o !== 'object') return;
@@ -2040,15 +2043,62 @@
         audioData: o.audioData || null,
         optionImages: Array.isArray(o.optionImages) ? o.optionImages.map(function (oi) {
           if (!oi) return null;
-          // 兼容两种存储格式：
-          //  - 旧版/导入时直接内嵌的 base64 字符串："data:image/png;base64,..."
-          //  - 规范对象：{ mediaId, data }
-          // 之前此处对字符串取到 oi.mediaId/oi.data 均为 undefined，会丢失图片数据 → 选项空白
+          // 兼容两种存储格式：旧版内嵌 base64 字符串 / 规范对象 { mediaId, data }
           if (typeof oi === 'string') return { mediaId: null, data: oi };
           return { mediaId: oi.mediaId || null, data: oi.data || null };
         }) : null
       });
     });
+    return valid;
+  }
+
+  // 纯解析官方题库文本（不修改 state.bank），返回 { ok, questions }，供拉取官方题库使用。
+  function parseBankText(text) {
+    text = (text || '').trim();
+    if (!text) return { ok: false, msg: '内容为空' };
+    var parsed = null;
+    try { parsed = JSON.parse(text); } catch (e) {}
+    var arr = [];
+    if (parsed) {
+      if (Array.isArray(parsed)) arr = parsed;
+      else if (Array.isArray(parsed.questions)) arr = parsed.questions;
+      else if (Array.isArray(parsed.data)) arr = parsed.data;
+      else return { ok: false, msg: 'JSON 格式应是题目数组' };
+    } else {
+      return { ok: false, msg: '无法解析 JSON' };
+    }
+    var valid = buildQuestions(arr);
+    if (!valid.length) return { ok: false, msg: '未找到有效题目' };
+    return { ok: true, questions: valid };
+  }
+
+  // 丢弃内置示例题（id 形如 s1..s32），避免示例与官方题混在一起
+  function stripSamples() {
+    var before = state.bank.length;
+    state.bank = state.bank.filter(function (q) { return !/^s\d+$/.test(q.id || ''); });
+    return before - state.bank.length;
+  }
+
+  function parseImport(text) {
+    text = (text || '').trim();
+    if (!text) return { ok: false, msg: '内容为空' };
+    var parsed = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) { /* 尝试 CSV */ }
+
+    var arr = [];
+    if (parsed) {
+      if (Array.isArray(parsed)) arr = parsed;
+      else if (Array.isArray(parsed.questions)) arr = parsed.questions;
+      else if (Array.isArray(parsed.data)) arr = parsed.data;
+      else return { ok: false, msg: 'JSON 格式应是题目数组' };
+    } else {
+      arr = parseCSV(text);
+      if (!arr) return { ok: false, msg: '无法解析，请检查 CSV 格式' };
+    }
+
+    var valid = buildQuestions(arr);
 
     if (!valid.length) return { ok: false, msg: '未找到有效题目' };
 
@@ -2172,6 +2222,9 @@
         msg.textContent = (res && res.msg) || '导入失败';
         return;
       }
+      // 导入后清理内置示例题，避免示例与官方题混在一起
+      stripSamples();
+      saveBank();
       // 题目已同步写入 state.bank，立即刷新列表（不被媒体还原阻塞）
       renderDashboard();
       renderBankList();
